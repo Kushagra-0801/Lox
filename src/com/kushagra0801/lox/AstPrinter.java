@@ -13,7 +13,7 @@ public class AstPrinter implements Expr.Visitor<String> {
         System.out.println(new AstPrinter().print(expression));
     }
 
-    private String print(Expr expr) {
+    String print(Expr expr) {
         return expr.accept(this);
     }
 
