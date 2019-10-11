@@ -9,8 +9,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Main {
-
+    private static final Interpreter interpreter = new Interpreter();
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
@@ -28,16 +29,24 @@ public class Main {
         run(new String(bytes, Charset.defaultCharset()));
         // Indicate an error in the exit code.
         if (hadError) System.exit(65);
+        if (hadRuntimeError) System.exit(70);
     }
 
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
+        //noinspection InfiniteLoopStatement,InfiniteLoopStatement
         for (; ; ) {
             System.out.print("> ");
-            run(reader.readLine());
-            hadError = false;
+            try {
+                run(reader.readLine());
+                hadError = false;
+            } catch (RuntimeError err) {
+                System.err.println(err);
+            } catch (Parser.ParseError err) {
+                System.err.println(err);
+            }
         }
     }
 
@@ -46,11 +55,11 @@ public class Main {
         List<Token> tokens = scanner.scanTokens();
 
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         // Stop if there was a syntax error
         if (hadError) return;
-        System.out.println(new AstPrinter().print(expression));
+        interpreter.interpret(statements);
     }
 
     static void error(int line, String message) {
@@ -68,5 +77,11 @@ public class Main {
         } else {
             report(token.line, " at '" + token.lexeme + "'", message);
         }
+    }
+
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() +
+                "\n[line " + error.token.line + "]");
+        hadRuntimeError = true;
     }
 }

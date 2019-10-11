@@ -31,7 +31,7 @@ class Scanner {
     }
 
     private final String source;
-    private final List<Token> tokens = new ArrayList<Token>();
+    private final List<Token> tokens = new ArrayList<>();
     private int start = 0;
     private int current = 0;
     private int line = 1;
@@ -116,6 +116,7 @@ class Scanner {
                 break;
             case '"':
                 string();
+                break;
             default:
                 if (isDigit(c)) {
                     number();
@@ -156,7 +157,7 @@ class Scanner {
         while (isDigit(peek())) advance();
 
         // Look for a fractional part.
-        if (peek() == '.' && isDigit(peek(1))) {
+        if (peek() == '.' && isDigit(peekNext())) {
             // Consume the "."
             advance();
 
@@ -178,9 +179,9 @@ class Scanner {
         return source.charAt(current);
     }
 
-    private char peek(int lookahead) {
-        if (current + lookahead >= source.length()) return '\0';
-        return source.charAt(current + lookahead);
+    private char peekNext() {
+        if (current + 1 >= source.length()) return '\0';
+        return source.charAt(current + 1);
     }
 
     private char advance() {
